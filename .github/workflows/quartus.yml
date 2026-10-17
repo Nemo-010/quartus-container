@@ -59,15 +59,14 @@ jobs:
       - name: Which Cyclone IV E parts does Quartus know?
         run: |
           set -euo pipefail
-          cat > /tmp/parts.tcl <<'TCL'
-          package require ::quartus::device
-          puts "FAMILIES:"
-          foreach f [get_device_families] { if {[string match -nocase "*Cyclone IV*" $f]} { puts "  $f" } }
-          puts "PARTS:"
-          foreach p [get_part_list -device_family "Cyclone IV E"] { if {[string match "EP4CE22*" $p]} { puts "  $p" } }
-          TCL
-          podman run --rm -v /tmp/parts.tcl:/tmp/parts.tcl:ro quartus:test \
-            quartus_sh -t /tmp/parts.tcl 2>&1 | tail -40
+          # quartus_sh has a built-in part query; use it instead of guessing Tcl.
+          podman run --rm quartus:test bash -c \
+            'quartus_sh --help 2>&1 | grep -iE "part|device" ' || true
+          echo "=== try the documented query ==="
+          podman run --rm quartus:test bash -c \
+            'printf "%s\n" "package require ::quartus::device" \
+             "foreach p [get_part_list -silent] { if {[string match EP4CE22* \$p]} { puts \$p } }" > /tmp/q.tcl; \
+             quartus_sh -t /tmp/q.tcl' 2>&1 | tail -20
 
       # The real test: synthesise a design for the DE0-Nano's part.
       - name: Synthesise a design for EP4CE22F17C6N
