@@ -106,8 +106,9 @@ jobs:
           podman run --rm -v "$PWD/proj:/work" quartus:test bash -c \
             'cd /work && quartus_sh -t synth.tcl && quartus_sh -t build.tcl' \
             | tee synth.log
-          grep -qi "successful" synth.log
-          ls -la proj/output_files/ | tee files.txt
+          grep -qi "Full Compilation was successful" synth.log
+          echo "=== build outputs ==="
+          find proj -name "*.sof" -o -name "*.fit.rpt" -o -name "*.sta.rpt" | tee files.txt
           grep -q "\.sof" files.txt
 
       - name: Image is amd64
@@ -206,6 +207,6 @@ jobs:
           podman run --rm -v "$PWD/proj:/work" "$img" bash -c \
             'cd /work && quartus_sh -t synth.tcl && quartus_sh -t build.tcl' \
             | tee synth.log
-          grep -qi "successful" synth.log
-          ls proj/output_files/
-          test -f proj/output_files/blinky.sof
+          grep -qi "Full Compilation was successful" synth.log
+          find proj -name "*.sof" | tee files.txt
+          grep -q "\.sof" files.txt
