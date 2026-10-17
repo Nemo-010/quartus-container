@@ -62,9 +62,9 @@ jobs:
           cat > /tmp/parts.tcl <<'TCL'
           package require ::quartus::device
           puts "FAMILIES:"
-          foreach f [get_device_family_list] { if {[string match -nocase "*Cyclone IV*" $f]} { puts "  $f" } }
+          foreach f [get_device_families] { if {[string match -nocase "*Cyclone IV*" $f]} { puts "  $f" } }
           puts "PARTS:"
-          foreach p [get_part_list -family "Cyclone IV E"] { if {[string match "EP4CE22*" $p]} { puts "  $p" } }
+          foreach p [get_part_list -device_family "Cyclone IV E"] { if {[string match "EP4CE22*" $p]} { puts "  $p" } }
           TCL
           podman run --rm -v /tmp/parts.tcl:/tmp/parts.tcl:ro quartus:test \
             quartus_sh -t /tmp/parts.tcl 2>&1 | tail -40
