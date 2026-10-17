@@ -81,8 +81,11 @@ jobs:
           project_close
           TCL
           cat > proj/build.tcl <<'TCL'
+          package require ::quartus::project
           package require ::quartus::flow
+          project_open blinky
           execute_flow -compile
+          project_close
           TCL
           podman run --rm -v "$PWD/proj:/work" quartus:test bash -c \
             'cd /work && quartus_sh -t synth.tcl && quartus_sh -t build.tcl' \
@@ -163,8 +166,11 @@ jobs:
           project_close
           TCL
           cat > proj/build.tcl <<'TCL'
+          package require ::quartus::project
           package require ::quartus::flow
+          project_open blinky
           execute_flow -compile
+          project_close
           TCL
           podman run --rm -v "$PWD/proj:/work" "$img" bash -c \
             'cd /work && quartus_sh -t synth.tcl && quartus_sh -t build.tcl' \
