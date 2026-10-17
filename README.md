@@ -16,12 +16,14 @@ From the theme's own requirements (eYRC 2025-26 portal):
 |---|---|
 | Quartus Prime | yes, with `quartus_map`/`fit`/`asm`/`sta` |
 | ModelSim | yes, Questa Intel FPGA Starter Edition (`vsim`) |
-| Cyclone device support for the DE0-Nano | yes, `cyclone` device data (Cyclone IV E) |
+| Cyclone device support for the DE0-Nano | yes, `cyclone` device data; `cycloneive` and `cycloneivgx` devinfo present |
 | x86_64, 4+ cores, 8 GB RAM, 100 GB SSD | the image is x86_64; give the container enough RAM |
 
-The DE0-Nano carries an **EP4CE22F17C6N** (Cyclone IV E). The build workflow
-synthesises a design for exactly that part and checks that a `.sof` comes out,
-so "it works" means it produced a bitstream, not that it started.
+The DE0-Nano is a Cyclone IV E part. Note the exact device name: Quartus's
+Cyclone IV E list contains `EP4CE22F17C6`, not `EP4CE22F17C6N`. The build
+workflow asks Quartus for the family's part list and synthesises a small
+design for a real part from it, then checks a `.sof` was produced. So "it
+works" means a bitstream came out, not that the tools started.
 
 ## On a Mac
 
@@ -78,8 +80,8 @@ quartus_sh -t synth.tcl     # project + device assignments
 quartus_sh -t build.tcl     # execute_flow -compile
 ```
 
-See `.github/workflows/quartus.yml` for a complete working example targeting
-`EP4CE22F17C6N`.
+See `.github/workflows/quartus.yml` for a complete working example. It
+produced `blinky.sof` for `EP4CE22F17C6` both natively and under emulation.
 
 ## Notes
 
