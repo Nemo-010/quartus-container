@@ -56,23 +56,22 @@ jobs:
           podman run --rm quartus:test bash -c \
             'ls -d /opt/quartus/quartus/common/devinfo/*'
 
-      - name: Which Cyclone IV E parts does Quartus know?
+      - name: Cyclone IV E parts are installed
         run: |
           set -euo pipefail
           cat > /tmp/q.tcl <<'TCL'
           package require ::quartus::device
-          puts "=== parts in family Cyclone IV E ==="
           set all [get_part_list -family "Cyclone IV E"]
-          puts "  count: [llength $all]"
-          foreach p $all { if {[string match EP4CE22* $p]} { puts "  MATCH: $p" } }
-          puts "=== first 5 ==="
-          foreach p [lrange $all 0 4] { puts "  $p" }
+          puts "COUNT=[llength $all]"
+          foreach p $all { if {[string match EP4CE22* $p]} { puts "PART=$p" } }
           TCL
           podman run --rm -v /tmp/q.tcl:/tmp/q.tcl:ro quartus:test \
-            quartus_sh -t /tmp/q.tcl 2>&1 | tail -25
+            quartus_sh -t /tmp/q.tcl | tee parts.txt
+          grep -q "COUNT=0" parts.txt && { echo "no Cyclone IV E parts"; exit 1; }
+          grep -q "PART=EP4CE22" parts.txt
 
       # The real test: synthesise a design for the DE0-Nano's part.
-      - name: Synthesise a design for EP4CE22F17C6N
+      - name: Synthesise a design for a Cyclone IV E part
         run: |
           set -euo pipefail
           mkdir -p proj
@@ -85,11 +84,13 @@ jobs:
             end
           endmodule
           VERILOG
-          cat > proj/synth.tcl <<'TCL'
+          part=$(grep -o 'EP4CE22[A-Z0-9]*' parts.txt | head -1)
+          echo "synthesising for $part"
+          cat > proj/synth.tcl <<TCL
           package require ::quartus::project
           project_new blinky -overwrite
           set_global_assignment -name FAMILY "Cyclone IV E"
-          set_global_assignment -name DEVICE EP4CE22F17C6N
+          set_global_assignment -name DEVICE $part
           set_global_assignment -name VERILOG_FILE blinky.v
           set_global_assignment -name TOP_LEVEL_ENTITY blinky
           export_assignments
@@ -156,6 +157,19 @@ jobs:
           podman run --rm "$img" quartus_sh --version
           podman run --rm "$img" quartus_map --version
 
+      - name: Find an installed Cyclone IV E part
+        run: |
+          set -euo pipefail
+          cat > /tmp/q.tcl <<'TCL'
+          package require ::quartus::device
+          foreach p [get_part_list -family "Cyclone IV E"] {
+            if {[string match EP4CE22* $p]} { puts "PART=$p" }
+          }
+          TCL
+          podman run --rm -v /tmp/q.tcl:/tmp/q.tcl:ro "${{ needs.build.outputs.image }}:latest" \
+            quartus_sh -t /tmp/q.tcl | tee parts.txt
+          grep -q "PART=EP4CE22" parts.txt
+
       - name: Synthesise under emulation
         run: |
           set -euo pipefail
@@ -170,11 +184,13 @@ jobs:
             end
           endmodule
           VERILOG
-          cat > proj/synth.tcl <<'TCL'
+          part=$(grep -o 'EP4CE22[A-Z0-9]*' parts.txt | head -1)
+          echo "synthesising for $part"
+          cat > proj/synth.tcl <<TCL
           package require ::quartus::project
           project_new blinky -overwrite
           set_global_assignment -name FAMILY "Cyclone IV E"
-          set_global_assignment -name DEVICE EP4CE22F17C6N
+          set_global_assignment -name DEVICE $part
           set_global_assignment -name VERILOG_FILE blinky.v
           set_global_assignment -name TOP_LEVEL_ENTITY blinky
           export_assignments
