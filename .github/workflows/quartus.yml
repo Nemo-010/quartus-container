@@ -50,17 +50,11 @@ jobs:
           set -euo pipefail
           podman run --rm quartus:test bash -c 'command -v vsim && vsim -version'
 
-      - name: Cyclone IV E device data is present
+      - name: Cyclone device data is present
         run: |
           set -euo pipefail
           podman run --rm quartus:test bash -c \
-            'ls -d /opt/quartus/quartus/common/devinfo/* | head -20'
-          # The DE0-Nano part must be known to the tools.
-          podman run --rm quartus:test bash -c \
-            'echo "package require ::quartus::device
-             puts [get_part_list -device_family {Cyclone IV E} EP4CE22F17C6N]" > /tmp/p.tcl; quartus_sh -t /tmp/p.tcl' \
-            | tee parts.txt
-          grep -q "EP4CE22F17C6N" parts.txt
+            'ls -d /opt/quartus/quartus/common/devinfo/*'
 
       # The real test: synthesise a design for the DE0-Nano's part.
       - name: Synthesise a design for EP4CE22F17C6N
