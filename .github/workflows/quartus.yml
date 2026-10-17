@@ -61,12 +61,12 @@ jobs:
           set -euo pipefail
           cat > /tmp/q.tcl <<'TCL'
           package require ::quartus::device
-          puts "=== parts matching EP4CE22 ==="
-          foreach p [get_part_list -device "EP4CE22*"] { puts "  $p" }
-          puts "=== any EP4CE at all? ==="
-          set n 0
-          foreach p [get_part_list -device "EP4CE*"] { incr n; if {$n <= 5} { puts "  $p" } }
-          puts "  total EP4CE parts: $n"
+          puts "=== parts in family Cyclone IV E ==="
+          set all [get_part_list -family "Cyclone IV E"]
+          puts "  count: [llength $all]"
+          foreach p $all { if {[string match EP4CE22* $p]} { puts "  MATCH: $p" } }
+          puts "=== first 5 ==="
+          foreach p [lrange $all 0 4] { puts "  $p" }
           TCL
           podman run --rm -v /tmp/q.tcl:/tmp/q.tcl:ro quartus:test \
             quartus_sh -t /tmp/q.tcl 2>&1 | tail -25
